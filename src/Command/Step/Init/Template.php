@@ -13,7 +13,14 @@ class Template implements StepInterface
         $input = $context['input'];
         $output = $context['output'];
 
-        // Récupération des engines via l'utilitaire
+        // Check if project type is Frontend or Mixed
+        if (!isset($context['type']) || ($context['type'] !== 'Frontend' && $context['type'] !== 'Mixed')) {
+            // Skip template selection for non-frontend projects
+            $context['template-engine'] = 'None';
+            $context['css-framework'] = 'None';
+            return true;
+        }
+
         $validTemplates = [];
         $engines = GistConfigLoader::getEngines();
         foreach ($engines as $engine) {
@@ -46,10 +53,10 @@ class Template implements StepInterface
             }
         }
 
-        $context['template'] = $template;
+        $context['template-engine'] = $template;
         $output->writeln("Template engine selected: <info>$template</info>");
         
-        // Récupération des CSS frameworks via l'utilitaire
+        // CSS framework selection
         $validCss = [];
         $cssFrameworks = GistConfigLoader::getCss();
         foreach ($cssFrameworks as $css) {
@@ -81,10 +88,10 @@ class Template implements StepInterface
                 $output->writeln("<error>Invalid CSS framework '$css'. Valid options are: " . implode(', ', $validCss) . "</error>");
                 return false;
             }
-            // Remet la casse d'origine pour le contexte
+
             $css = $validCss[array_search($cssLower, $validCssLower)];
         }
-        $context['css'] = $css;
+        $context['css-framework'] = $css;
         $output->writeln("CSS framework selected: <info>$css</info>");
         
         return true;

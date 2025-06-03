@@ -3,6 +3,7 @@
 namespace Goramax\NoctalysCli\Command\Step\Init;
 use Goramax\NoctalysCli\Command\Step\StepInterface;
 use Symfony\Component\Console\Question\Question;
+use Goramax\NoctalysCli\Utils\StringTransformer;
 
 class Name implements StepInterface
 {
@@ -21,31 +22,69 @@ class Name implements StepInterface
             
             do {
                 $question = new Question(
-                    'Enter the name of your project (default: "noctalys-project"): ',
+                    'Enter the name of your project (default: "noctalys-project", use quotes for names with spaces): ',
                     'noctalys-project'
                 );
                 $name = $helper->ask($input, $output, $question);
 
                 // === Validate project name ===
-                if (!preg_match('/^[a-zA-Z0-9_-]+$/', $name)) {
-                    $output->writeln('<error>Invalid project name. Only alphanumeric characters, underscores, and hyphens are allowed.</error>');
+                if ($this->isQuoted($name)) {
+                    // If name is quoted, allow spaces and capital letters
+                    $isValid = true;
+                } else if (!preg_match('/^[a-zA-Z0-9_-]+$/', $name)) {
+                    $output->writeln('<error>Invalid project name. Use quotes for names with spaces, or stick to alphanumeric characters, underscores, and hyphens.</error>');
                     $isValid = false;
                 } else {
                     $isValid = true;
                 }
             } while (!$isValid);
+            
+            // Ask for optional project description
+            $descQuestion = new Question('Enter a project description (press Return key to skip): ', '');
+            $description = $helper->ask($input, $output, $descQuestion);
+            
         } else {
             // Validate provided name option
-            if (!preg_match('/^[a-zA-Z0-9_-]+$/', $name)) {
-                $output->writeln('<error>Invalid project name provided. Only alphanumeric characters, underscores, and hyphens are allowed.</error>');
+            if (!$this->isQuoted($name) && !preg_match('/^[a-zA-Z0-9_-]+$/', $name)) {
+                $output->writeln('<error>Invalid project name provided. Use quotes for names with spaces, or stick to alphanumeric characters, underscores, and hyphens.</error>');
                 return false;
             }
             $output->writeln('Welcome to the Noctalys CLI project initializer!');
+            
+            // Ask for optional project description
+            $descQuestion = new Question('Enter a project description (press Return key to skip): ', '');
+            $description = $helper->ask($input, $output, $descQuestion);
         }
 
-        $context['name'] = $name;
-        $output->writeln("Project name set to: <info>$name</info>");
+        // Store the original name (with quotes removed if present)
+        $originalName = trim($name, '"\'');
+        $context['name'] = $originalName;
+        
+        // Add transformed versions to the context
+        $context['name_kebab'] = StringTransformer::toKebabCase($name);
+        $context['name_camel'] = StringTransformer::toCamelCase($name);
+        $context['description'] = $description;
+        
+        $output->writeln("Project name set to: <info>$originalName</info>");
+        $output->writeln("Directory name will be: <info>" . $context['name_kebab'] . "</info>");
+        $output->writeln("Namespace will be: <info>" . $context['name_camel'] . "</info>");
+        
+        if (!empty($description)) {
+            $output->writeln("Project description: <info>$description</info>");
+        }
         
         return true;
+    }
+    
+    /**
+     * Check if a string is enclosed in quotes
+     */
+    private function isQuoted(string $string): bool
+    {
+        $string = trim($string);
+        return (
+            (substr($string, 0, 1) === '"' && substr($string, -1) === '"') ||
+            (substr($string, 0, 1) === "'" && substr($string, -1) === "'")
+        );
     }
 }

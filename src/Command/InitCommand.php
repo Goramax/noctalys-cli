@@ -4,13 +4,15 @@ namespace Goramax\NoctalysCli\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Goramax\NoctalysCli\Command\Step\Init\Name;
 use Goramax\NoctalysCli\Command\Step\Init\Path;
 use Goramax\NoctalysCli\Command\Step\Init\Template;
-use Goramax\NoctalysCli\Command\Step\Init\Repository;
+use Goramax\NoctalysCli\Command\Step\Init\RepositoryClone;
+use Goramax\NoctalysCli\Command\Step\Init\BaseProject;
+use Goramax\NoctalysCli\Command\Step\Init\Type;
+use Goramax\NoctalysCli\Command\Step\Init\Setup;
 
 class InitCommand extends Command
 {
@@ -22,9 +24,12 @@ class InitCommand extends Command
             ->setName('init')
             ->setDescription('Initialize a new Noctalys project')
             ->addOption('name', null, InputOption::VALUE_REQUIRED, 'Project name')
+            ->addOption('description', 'd', InputOption::VALUE_OPTIONAL, 'Project description')
             ->addOption('path', 'p', InputOption::VALUE_REQUIRED, 'Path to create the project in', getcwd())
-            ->addOption('template-engine', 't', InputOption::VALUE_REQUIRED, 'Template engine (twig, blade, raw)')
-            ->addOption('css-framework', 'c', InputOption::VALUE_REQUIRED, 'CSS framework (tailwind, none)')
+            ->addOption('type', 't', InputOption::VALUE_REQUIRED, 'Project type (Backend, Frontend, Mixed)')
+            ->addOption('template-engine', 'te', InputOption::VALUE_REQUIRED, 'Template engine (twig, blade, raw)')
+            ->addOption('css-framework', 'cf', InputOption::VALUE_REQUIRED, 'CSS framework (tailwind, none)')
+            ->addOption('base-project', null, InputOption::VALUE_REQUIRED , 'Base project to use for initialization if the project type is Frontend or Mixed (Complete or Minimal)')
             ->setHelp('This command allows you to create a new Noctalys project by guiding you through a series of steps.');
     }
 
@@ -43,9 +48,11 @@ class InitCommand extends Command
         $steps = [
             new Name(),
             new Path(),
+            new Type(),
             new Template(),
-            new Repository(),
-            
+            new BaseProject(),
+            new RepositoryClone(),
+            new Setup(),
         ];
 
         // Execute each step

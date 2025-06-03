@@ -4,7 +4,7 @@ namespace Goramax\NoctalysCli\Command\Step\Init;
 
 use Goramax\NoctalysCli\Command\Step\StepInterface;
 
-class Repository implements StepInterface
+class RepositoryClone implements StepInterface
 {
     public function run(array &$context): bool
     {
