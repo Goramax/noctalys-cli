@@ -1,5 +1,4 @@
 <?php
-// remove unused files if project is only frontend or backend
 
 namespace Goramax\NoctalysCli\Command\Step\Init\Setup;
 
@@ -53,6 +52,20 @@ class CleanFiles implements StepInterface
                 $output->writeln("No styles directory to remove for backend-only project.");
             }
         }
+        
+        // Remove temporary directory if it exists
+        $tmpDir = $target . '/.tmp';
+        if (is_dir($tmpDir)) {
+            $output->writeln("<comment>Removing temporary directory...</comment>");
+            exec("rm -rf " . escapeshellarg($tmpDir), $rmOutput, $rmCode);
+            if ($rmCode !== 0) {
+                $output->writeln("<error>Failed to remove temporary directory</error>");
+                // Don't return false here, consider it a non-critical error
+            } else {
+                $output->writeln("<info>Removed temporary directory: $tmpDir</info>");
+            }
+        }
+        
         return true;
     }
 }
