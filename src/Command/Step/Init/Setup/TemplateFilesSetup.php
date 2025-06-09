@@ -9,6 +9,12 @@ class TemplateFilesSetup implements StepInterface
     /** Path to local starter templates (relative to project root) */
     private string $localTemplatePath = '';
 
+    /**
+     * Run template files setup step
+     * 
+     * @param array &$context Context data containing project information
+     * @return bool True if templates were set up successfully
+     */
     public function run(array &$context): bool
     {
         $output = $context['output'];
@@ -17,14 +23,12 @@ class TemplateFilesSetup implements StepInterface
         $templateEngine = strtolower($context['template-engine'] ?? 'php');
         $cssFramework = strtolower($context['css-framework'] ?? 'none');
         
-        // Use target from context which has the complete project path
         $projectDir = $context['target'] ?? getcwd();
         
         $this->localTemplatePath = $projectDir . '/../noctalys-starter-templates';
         $output->writeln("----- TemplateFilesSetup -----");
         $output->writeln($this->localTemplatePath);
 
-        // Create temp directory for cloning
         $tmpDir = $projectDir . '/.tmp';
         if (!is_dir($tmpDir)) {
             if (!mkdir($tmpDir, 0755, true)) {
@@ -37,13 +41,11 @@ class TemplateFilesSetup implements StepInterface
             $templateRepoDir = $this->localTemplatePath;
             $output->writeln("<comment>Using local template directory: {$this->localTemplatePath}</comment>");
         } else {
-            // Clone the template repository
             $repoUrl         = 'https://github.com/Goramax/noctalys-starter-templates.git';
             $templateRepoDir = $tmpDir . '/noctalys-starter-templates';
             $output->writeln("<comment>Cloning template repository...</comment>");
             exec("git clone $repoUrl $templateRepoDir 2>&1", $cmdOutput, $returnCode);
 
-            // Check if clone was successful
             if ($returnCode !== 0) {
                 $output->writeln("<error>Failed to clone the template repository: " . implode("\n", $cmdOutput) . "</error>");
                 return false;
@@ -52,7 +54,6 @@ class TemplateFilesSetup implements StepInterface
             $output->writeln("<info>Template repository cloned successfully.</info>");
         }
         
-        // Set up target directories
         $targetDir = $projectDir . '/src/Frontend';
         if (!is_dir($targetDir)) {
             if (!mkdir($targetDir, 0755, true)) {
@@ -61,18 +62,15 @@ class TemplateFilesSetup implements StepInterface
             }
         }
         
-        // Convert templates using TemplateConverter
         $output->writeln(sprintf("<comment>Converting templates for %s with %s CSS framework...</comment>", 
             $templateEngine, 
             $cssFramework !== 'none' ? $cssFramework : 'no'
         ));
         
         try {
-            // Templates source and destination
             $templatesSourceDir = $templateRepoDir;
             $templatesDestDir = $tmpDir . '/converted_templates';
             
-            // Initialize and run the converter
             $converter = new TemplateConverter(
                 $templateEngine, 
                 $cssFramework, 
@@ -88,10 +86,8 @@ class TemplateFilesSetup implements StepInterface
                 return false;
             }
             
-            // Apply converted templates to project with replacements
             $output->writeln("<comment>Applying converted templates to project directory...</comment>");
             
-            // Pass the correct projectDir to applyToProject
             $success = $converter->applyToProject($projectDir);
             
             if (!$success) {
@@ -99,7 +95,6 @@ class TemplateFilesSetup implements StepInterface
                 return false;
             }
 
-            // Apply config file template
             $success = $converter->replaceConfigFile($context['type'], $projectDir);
             if (!$success) {
                 $output->writeln("<error>Failed to apply config file template</error>");
@@ -108,7 +103,6 @@ class TemplateFilesSetup implements StepInterface
             
             $output->writeln("<info>Template files setup completed successfully</info>");
             
-            // Clean up temporary files if needed
             if (isset($context['cleanup_tmp']) && $context['cleanup_tmp'] === true) {
                 $output->writeln("<comment>Cleaning up temporary files...</comment>");
                 $this->recursiveRemoveDir($tmpDir);
@@ -122,35 +116,10 @@ class TemplateFilesSetup implements StepInterface
     }
     
     /**
-     * Recursively copy files and directories
-     */
-    private function recursiveCopy(string $source, string $destination): void
-    {
-        if (!is_dir($destination)) {
-            mkdir($destination, 0755, true);
-        }
-        
-        $dir = opendir($source);
-        while (($file = readdir($dir)) !== false) {
-            if ($file === '.' || $file === '..') {
-                continue;
-            }
-            
-            $sourcePath = "$source/$file";
-            $destinationPath = "$destination/$file";
-            
-            if (is_dir($sourcePath)) {
-                $this->recursiveCopy($sourcePath, $destinationPath);
-            } else {
-                copy($sourcePath, $destinationPath);
-            }
-        }
-        
-        closedir($dir);
-    }
-    
-    /**
      * Recursively remove directory and its contents
+     * 
+     * @param string $dir Directory to remove
+     * @return bool True if directory was removed successfully
      */
     private function recursiveRemoveDir(string $dir): bool
     {

@@ -14,6 +14,12 @@ class UpdateFiles implements StepInterface
     private $input;
     private $target;
 
+    /**
+     * Update project files with correct names, paths and configuration
+     * 
+     * @param array &$context Context data containing project information
+     * @return bool True if file updates were successful
+     */
     public function run(array &$context): bool
     {
         $this->output = $context['output'];
@@ -48,13 +54,27 @@ class UpdateFiles implements StepInterface
 
         $this->output->writeln("Updated config file at <info>$configFile</info>");
 
-        // Update file tree based on project type
         $this->updateFileTree($type);
         $this->output->writeln("<info>File tree updated based on project type: $type</info>");
+        
+        // Clean navigation component if project is minimal
+        $baseProject = strtolower($context['base_project'] ?? '');
+        if ($baseProject === 'minimal' && in_array($type, ['frontend', 'mixed'], true)) {
+            $this->cleanNavComponent();
+        }
 
         return true;
     }
 
+    /**
+     * Update composer.json file with project information
+     * 
+     * @param string $filePath Path to composer.json
+     * @param string $projectName Project name in kebab-case
+     * @param string $namespace Project namespace in CamelCase
+     * @param array $context Full context data
+     * @return bool True if successful
+     */
     private function updateComposerFile(string $filePath, string $projectName, string $namespace, array $context): bool
     {
         if (!file_exists($filePath)) {
@@ -69,7 +89,6 @@ class UpdateFiles implements StepInterface
             $namespace . '\\' => 'src/',
         ];
 
-        // Set the framework version from context if available
         if (!empty($context['frameworkVersion'])) {
             if (!isset($composerData['require'])) {
                 $composerData['require'] = [];
@@ -97,26 +116,21 @@ class UpdateFiles implements StepInterface
             return false;
         }
 
-        // Load config using ConfigManager
         $config = ConfigManager::load($filePath);
         if ($config === null) {
             $this->output->writeln("<error>Invalid JSON in config file</error>");
             return false;
         }
 
-        // Update app.name if it exists
         if (ConfigManager::has($config, 'app.name')) {
             ConfigManager::set($config, 'app.name', $projectName);
         }
 
-        // Update template engine if frontend project and template_engine.engine exists
         if ($type === 'frontend' && ConfigManager::has($config, 'template_engine.engine')) {
-            // Map 'none' to 'no'
             $engineValue = ($templateEngine === 'none') ? 'no' : $templateEngine;
             ConfigManager::set($config, 'template_engine.engine', $engineValue);
         }
 
-        // Save config
         if (!ConfigManager::save($filePath, $config)) {
             $this->output->writeln("<error>Failed to write config file at $filePath</error>");
             return false;
@@ -127,7 +141,6 @@ class UpdateFiles implements StepInterface
     }
 
     private function updateFileTree($type){
-        // if mixed, do nothing
         if ($type === 'mixed') {
             $this->output->writeln("<info>Mixed project type, no file tree updates needed.</info>");
             return;
@@ -155,6 +168,7 @@ class UpdateFiles implements StepInterface
             }
         }
     }
+    
     private function recursiveCopy(string $source, string $destination): void
     {
         if (!is_dir($destination)) {
@@ -180,6 +194,60 @@ class UpdateFiles implements StepInterface
         closedir($dir);
     }
 
+    /**
+     * Clean the navigation component to only show the Home link for minimal projects
+     * 
+     * @return void
+     */
+    private function cleanNavComponent(): void
+    {
+        $navComponentPath = null;
+        $searchDir = $this->target . '/src';
+
+        if (is_dir($searchDir)) {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($searchDir, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $fileInfo) {
+                if ($fileInfo->isFile() 
+                    && preg_match('/^nav\.component\.[^\.\/]+$/i', $fileInfo->getFilename())
+                ) {
+                    $navComponentPath = $fileInfo->getPathname();
+                    break;
+                }
+            }
+        }
+
+        if ($navComponentPath === null) {
+            $this->output->writeln("<comment>Navigation component file not found. Skipping cleanup.</comment>");
+            return;
+        }
+
+        $content = @file_get_contents($navComponentPath);
+        if ($content === false) {
+            $this->output->writeln("<error>Failed to read navigation component file: $navComponentPath</error>");
+            return;
+        }
+
+        // Keep only the Home link in the navigation
+        $cleanNav = '<nav>' . PHP_EOL
+                  . '    <a href="/">Home</a>' . PHP_EOL
+                  . '</nav>';
+
+        $content = preg_replace(
+            '/<nav\b.*?>.*?<a\s+href="[^"]*"\s*>Home<\/a>.*?<\/nav>/si',
+            $cleanNav,
+            $content
+        );
+
+        if (@file_put_contents($navComponentPath, $content) === false) {
+            $this->output->writeln("<error>Failed to update navigation component file: $navComponentPath</error>");
+            return;
+        }
+
+        $this->output->writeln("<info>Updated navigation component to show only Home link: $navComponentPath</info>");
+    }
+    
     private function recursiveRemoveDir(string $dir): void
     {
         if (!is_dir($dir)) {

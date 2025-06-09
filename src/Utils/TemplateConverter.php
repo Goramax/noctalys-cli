@@ -33,12 +33,10 @@ class TemplateConverter
         $this->outputDir = rtrim($outputDir, '/');   
         $this->output = $output;
         
-        // The engines are in the templates repository root, not one level up
         $repoRoot = $this->inputDir;
         $enginePath = "{$repoRoot}/engines/{$engine}.json";
         $cssFrameworkPath = "{$repoRoot}/css-frameworks/{$cssFramework}.json";
         
-        // Debug output - Plus besoin de vérifier si $output est null
         $this->output->writeln("Looking for engine at: {$enginePath}");
         
         $this->engineFile = $enginePath;
@@ -52,17 +50,14 @@ class TemplateConverter
      */
     public function convert(): bool
     {
-        // First load engine data
         if (!$this->loadEngineData()) {
             return false;
         }
         
-        // Then load CSS framework data if specified
         if ($this->cssFramework !== 'none' && !$this->loadCssFrameworkData()) {
             return false;
         }
 
-        // Create output directory if it doesn't exist
         if (!is_dir($this->outputDir)) {
             if (!mkdir($this->outputDir, 0755, true)) {
                 $this->output->writeln("<error>Error: Failed to create output directory</error>");
@@ -70,14 +65,12 @@ class TemplateConverter
             }
         }
 
-        // Process only the templates directory, not the entire repo
         $templatesDir = "{$this->inputDir}/templates";
         if (!is_dir($templatesDir)) {
             $this->output->writeln("<error>Error: Templates directory not found at: {$templatesDir}</error>");
             return false;
         }
 
-        // Process each template file starting from the templates directory
         $this->processDirectory($templatesDir, $this->outputDir);
         $this->output->writeln("Conversion completed successfully!");
         
@@ -95,13 +88,11 @@ class TemplateConverter
     {
         $targetProjectDir = rtrim($targetProjectDir, '/');
         
-        // Check if target project directory exists
         if (!is_dir($targetProjectDir)) {
             $this->output->writeln("<error>Error: Target project directory does not exist: {$targetProjectDir}</error>");
             return false;
         }
         
-        // Check if output directory with converted templates exists
         if (!is_dir($this->outputDir)) {
             $this->output->writeln("<error>Error: Converted templates directory does not exist. Run convert() first.</error>");
             return false;
@@ -109,7 +100,6 @@ class TemplateConverter
         
         $this->output->writeln("Applying templates to project: {$targetProjectDir}");
         
-        // Create frontend directory in target project if it doesn't exist
         $targetFrontendDir = "{$targetProjectDir}/src/Frontend";
         if (!is_dir($targetFrontendDir)) {
             if (!mkdir($targetFrontendDir, 0755, true)) {
@@ -118,7 +108,6 @@ class TemplateConverter
             }
         }
         
-        // Copy the converted templates to the target project
         if (!$this->copyWithReplacementsAndCleanConflicts($this->outputDir, $targetFrontendDir, $replacements)) {
             $this->output->writeln("<error>Error: Failed to apply templates to project</error>");
             return false;
@@ -167,20 +156,17 @@ class TemplateConverter
      */
     private function loadEngineData(): bool
     {
-        // Check if engine is valid
         if (!file_exists($this->engineFile)) {
             $this->output->writeln("<error>Error: Engine '{$this->engine}' not found.</error>");
             return false;
         }
 
-        // Load engine mappings
         $this->engineData = json_decode(file_get_contents($this->engineFile), true);
         if (!$this->engineData || !isset($this->engineData['mappings'])) {
             $this->output->writeln("<error>Error: Invalid engine mapping file</error>");
             return false;
         }
 
-        // Validate engine data
         if (!isset($this->engineData['file_extension'])) {
             $this->output->writeln("Warning: No file_extension defined in engine file, using '.html' as default");
             $this->engineData['file_extension'] = '.html';
@@ -196,18 +182,15 @@ class TemplateConverter
      */
     private function loadCssFrameworkData(): bool
     {
-        // Skip if no CSS framework specified
         if (empty($this->cssFramework) || $this->cssFramework === 'none') {
             return true;
         }
         
-        // Check if CSS framework file exists
         if (!file_exists($this->cssFrameworkFile)) {
             $this->output->writeln("<error>Error: CSS framework '{$this->cssFramework}' not found.</error>");
             return false;
         }
 
-        // Load CSS framework mappings
         $this->cssFrameworkData = json_decode(file_get_contents($this->cssFrameworkFile), true);
         if (!$this->cssFrameworkData || !isset($this->cssFrameworkData['mappings'])) {
             $this->output->writeln("<error>Error: Invalid CSS framework mapping file</error>");
@@ -225,7 +208,6 @@ class TemplateConverter
      */
     private function processDirectory(string $inputDir, string $outputDir): void
     {
-        // Fix: Don't append '/templates' here, it's already part of the path
         $items = scandir($inputDir);
         
         foreach ($items as $item) {
@@ -237,20 +219,16 @@ class TemplateConverter
             $outputPath = "{$outputDir}/{$item}";
             
             if (is_dir($inputPath)) {
-                // Create the output subdirectory if it doesn't exist
                 if (!is_dir($outputPath) && !mkdir($outputPath, 0755, true)) {
                     $this->output->writeln("<error>Error: Failed to create directory: {$outputPath}</error>");
                     continue;
                 }
                 
-                // Process subdirectory recursively
                 $this->processDirectory($inputPath, $outputPath);
             } else {
-                // Only process HTML files
                 if (pathinfo($inputPath, PATHINFO_EXTENSION) === 'html') {
                     $this->convertTemplateFile($inputPath, $outputPath);
                 } else {
-                    // Copy non-template files as-is
                     copy($inputPath, $outputPath);
                 }
             }
@@ -265,22 +243,18 @@ class TemplateConverter
      */
     private function convertTemplateFile(string $inputPath, string $outputPath): void
     {
-        // Read the template file
         $content = file_get_contents($inputPath);
         if ($content === false) {
             $this->output->writeln("<error>Error: Failed to read file: {$inputPath}</error>");
             return;
         }
         
-        // STEP 1: Apply template engine conversions
         $content = $this->applyEngineMappings($content);
         
-        // STEP 2: Apply CSS framework conversions if available
         if ($this->cssFrameworkData !== null) {
             $content = $this->applyCssFrameworkMappings($content);
         }
         
-        // Create output directory if needed
         $outputDir = dirname($outputPath);
         if (!is_dir($outputDir)) {
             if (!mkdir($outputDir, 0755, true)) {
@@ -289,10 +263,8 @@ class TemplateConverter
             }
         }
         
-        // Change the file extension based on the engine
         $outputPath = preg_replace('/\.stub\.html$/', $this->getFileExtension(), $outputPath);
         
-        // Write the result to the output file
         if (file_put_contents($outputPath, $content) === false) {
             $this->output->writeln("<error>Error: Failed to write file: {$outputPath}</error>");
             return;
@@ -313,8 +285,6 @@ class TemplateConverter
             $pattern = $mapping['pattern'];
             $replacement = $mapping['replacement'];
 
-            // Always delimit with # to avoid escaping slashes, and add 's' modifiers:
-            // - s: dot matches newlines (multiline)
             $content = preg_replace("#$pattern#s", $replacement, $content);
         }
         return $content;
@@ -332,7 +302,6 @@ class TemplateConverter
             $pattern = $mapping['pattern'];
             $replacement = $mapping['replacement'];
 
-            // Always delimit with # to avoid escaping slashes, and add 's' modifiers:
             $content = preg_replace("#$pattern#s", $replacement, $content);
         }
         return $content;
@@ -369,22 +338,18 @@ class TemplateConverter
             $destinationPath = "{$destination}/{$item}";
             
             if (is_dir($sourcePath)) {
-                // Create the destination subdirectory if it doesn't exist
                 if (!is_dir($destinationPath) && !mkdir($destinationPath, 0755, true)) {
                     $this->output->writeln("<error>Error: Failed to create directory: {$destinationPath}</error>");
                     return false;
                 }
                 
-                // Process subdirectory recursively
                 if (!$this->copyWithReplacementsAndCleanConflicts($sourcePath, $destinationPath, $replacements)) {
                     return false;
                 }
             } else {
-                // Get basename without extension
                 $baseName = pathinfo($item, PATHINFO_FILENAME);
                 $destDir = dirname($destinationPath);
                 
-                // Remove existing files with same basename but different extension
                 if (is_dir($destDir)) {
                     $existingFiles = scandir($destDir);
                     foreach ($existingFiles as $existingFile) {
@@ -399,21 +364,18 @@ class TemplateConverter
                     }
                 }
                 
-                // Read the file content
                 $content = file_get_contents($sourcePath);
                 if ($content === false) {
                     $this->output->writeln("<error>Error: Failed to read file: {$sourcePath}</error>");
                     return false;
                 }
                 
-                // Apply text replacements for text files
                 if ($this->isTextFile($sourcePath)) {
                     foreach ($replacements as $search => $replace) {
                         $content = str_replace($search, $replace, $content);
                     }
                 }
                 
-                // Write the content to the destination
                 if (file_put_contents($destinationPath, $content) === false) {
                     $this->output->writeln("<error>Error: Failed to write file: {$destinationPath}</error>");
                     return false;
@@ -427,15 +389,50 @@ class TemplateConverter
     }
     
     /**
-     * Check if a file is a text file based on extension
+     * Check if a file is a text file
      *
      * @param string $filePath File path to check
      * @return bool True if it's a text file
      */
     private function isTextFile(string $filePath): bool
     {
-        $textExtensions = ['php', 'html', 'twig', 'tpl', 'latte', 'js', 'css', 'scss', 'json', 'md', 'txt', 'yml', 'yaml', 'xml'];
+        $textExtensions = [
+            'php', 'html', 'htm', 'js', 'css', 'scss', 'sass', 'less',
+            'json', 'xml', 'yml', 'yaml', 'md', 'txt', 'csv',
+            'ini', 'conf', 'env',
+            'twig', 'latte', 'blade', 'smarty', 'mustache', 'phtml', 'volt', 'liquid'
+        ];
+        
         $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-        return in_array($extension, $textExtensions);
+        
+        if (in_array($extension, $textExtensions)) {
+            return true;
+        }
+        
+        if (file_exists($filePath)) {
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($filePath);
+            if (strpos($mime, 'text/') === 0) {
+                return true;
+            }
+            
+            $content = @file_get_contents($filePath, false, null, 0, 1000);
+            if ($content !== false && mb_detect_encoding($content, 'UTF-8', true)) {
+                return true;
+            }
+        }
+        
+        if (isset($this->engineData['file_extension'])) {
+            $engineExt = ltrim($this->engineData['file_extension'], '.');
+            if ($extension === $engineExt) {
+                return true;
+            }
+        }
+        
+        if (file_exists($filePath) && filesize($filePath) < 1024 * 50) {
+            return true;
+        }
+        
+        return false;
     }
 }

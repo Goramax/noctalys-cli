@@ -7,6 +7,11 @@ class GistConfigLoader
     private static $config = null;
     private static $gistUrl = 'https://gist.githubusercontent.com/Goramax/b36781048ba63bf584b9eae9627b9530/raw';
 
+    /**
+     * Retrieve configuration data from GitHub Gist
+     *
+     * @return array Configuration data
+     */
     public static function getConfig()
     {
         if (self::$config !== null) {
@@ -24,6 +29,11 @@ class GistConfigLoader
         return self::$config;
     }
 
+    /**
+     * Get available template engines
+     *
+     * @return array List of template engines
+     */
     public static function getEngines()
     {
         $config = self::getConfig();
@@ -33,6 +43,11 @@ class GistConfigLoader
         return [];
     }
 
+    /**
+     * Get available CSS frameworks
+     *
+     * @return array List of CSS frameworks
+     */
     public static function getCss()
     {
         $config = self::getConfig();

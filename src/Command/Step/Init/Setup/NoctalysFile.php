@@ -7,15 +7,31 @@ use Goramax\NoctalysCli\Utils\ConfigManager;
 
 class NoctalysFile implements StepInterface
 {
+    /**
+     * Set up the .noctalys configuration file for the project
+     * 
+     * @param array &$context Context data containing project information
+     * @return bool True if the file was created successfully
+     */
     public function run(array &$context): bool
     {
-        $output      = $context['output'];
-        $target      = $context['target'];
-        $namespace   = $context['name_camel'] ?? 'NoctalysDemoApp';
+        $output    = $context['output'];
+        $target    = $context['target'];
+        $namespace = $context['name_camel'] ?? 'NoctalysDemoApp';
         $projectType = $context['type'] ?? 'Mixed';
 
-        // Get framework version from context or fetch from GitHub tags
-        $frameworkVersion = $context['frameworkVersion'] ?? $this->getLatestNoctalysTag();
+        // Get or validate framework version
+        $requested = $context['frameworkVersion'] ?? null;
+        if ($requested) {
+            $tags = $this->getNoctalysTags();
+            if (!in_array($requested, $tags, true)) {
+                $output->writeln("<error>Version '{$requested}' not found. Available versions: " . implode(', ', $tags) . "</error>");
+                return false;
+            }
+            $frameworkVersion = $requested;
+        } else {
+            $frameworkVersion = $this->getLatestNoctalysTag();
+        }
 
         $configData = [
             'namespace'        => $namespace,
@@ -24,10 +40,9 @@ class NoctalysFile implements StepInterface
             'frameworkVersion' => $frameworkVersion,
         ];
 
-        // if project has a template engine, add the name and extension to the config
+        // Add template engine info if available
         $engine = strtolower($context['template-engine'] ?? '');
         if ($engine && $engine !== 'none') {
-            // assume starter-templates lives one level up from target
             $engineFile = rtrim($target, '/') . '/../noctalys-starter-templates/engines/' . $engine . '.json';
             if (file_exists($engineFile)) {
                 $engineConfig = ConfigManager::load($engineFile);
@@ -55,23 +70,38 @@ class NoctalysFile implements StepInterface
         return true;
     }
 
-    private function getLatestNoctalysTag(): string
+    /**
+     * Fetch all Noctalys tags from GitHub
+     *
+     * @return string[]
+     */
+    private function getNoctalysTags(): array
     {
         $tagsUrl = 'https://api.github.com/repos/Goramax/Noctalys/tags';
-        $opts = [
-            "http" => [
-                "method" => "GET",
-                "header" => "User-Agent: NoctalysCli\r\n"
-            ]
-        ];
-        $context = stream_context_create($opts);
-        $json = @file_get_contents($tagsUrl, false, $context);
+        $opts = ["http" => ["method" => "GET", "header" => "User-Agent: NoctalysCli\r\n"]];
+        $ctx  = stream_context_create($opts);
+        $json = @file_get_contents($tagsUrl, false, $ctx);
         if ($json !== false) {
-            $tags = json_decode($json, true);
-            if (is_array($tags) && count($tags) > 0 && isset($tags[0]['name'])) {
-                return $tags[0]['name'];
+            $items = json_decode($json, true);
+            if (is_array($items)) {
+                return array_map(fn($t) => $t['name'] ?? '', $items);
             }
         }
-        return '0.1.0';
+        return [];
+    }
+
+    /**
+     * Get the latest Noctalys tag
+     *
+     * @return string
+     */
+    private function getLatestNoctalysTag(): string
+    {
+        $tags = array_filter($this->getNoctalysTags());
+        if (empty($tags)) {
+            return '0.1.0';
+        }
+        usort($tags, fn($a, $b) => version_compare($b, $a));
+        return $tags[0];
     }
 }

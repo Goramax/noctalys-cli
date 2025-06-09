@@ -18,6 +18,11 @@ class InitCommand extends Command
 {
     protected static $defaultName = 'init';
 
+    /**
+     * Configure the command options
+     *
+     * @return void
+     */
     protected function configure(): void
     {
         $this
@@ -30,9 +35,17 @@ class InitCommand extends Command
             ->addOption('template-engine', 'te', InputOption::VALUE_REQUIRED, 'Template engine (twig, blade, raw)')
             ->addOption('css-framework', 'cf', InputOption::VALUE_REQUIRED, 'CSS framework (tailwind, none)')
             ->addOption('base-project', null, InputOption::VALUE_REQUIRED , 'Base project to use for initialization if the project type is Frontend or Mixed (Complete or Minimal)')
+            ->addOption('frameworkVersion', 'fv', InputOption::VALUE_OPTIONAL, 'Noctalys framework version to use')
             ->setHelp('This command allows you to create a new Noctalys project by guiding you through a series of steps.');
     }
 
+    /**
+     * Execute the command logic
+     *
+     * @param InputInterface $input Command input
+     * @param OutputInterface $output Command output
+     * @return int Command exit code
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $helper = $this->getHelper('question');
