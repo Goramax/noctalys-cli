@@ -1,6 +1,6 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command\Step;
+namespace Noctalys\Cli\Command\Step;
 
 interface StepInterface {
     /**

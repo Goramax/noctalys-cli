@@ -1,8 +1,8 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command\Step\Init\Setup;
-use Goramax\NoctalysCli\Command\Step\StepInterface;
-use Goramax\NoctalysCli\Utils\TemplateConverter;
+namespace Noctalys\Cli\Command\Step\Init\Setup;
+use Noctalys\Cli\Command\Step\StepInterface;
+use Noctalys\Cli\Utils\TemplateConverter;
 
 class TemplateFilesSetup implements StepInterface
 {

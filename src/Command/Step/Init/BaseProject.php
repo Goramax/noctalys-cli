@@ -1,7 +1,7 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command\Step\Init;
-use Goramax\NoctalysCli\Command\Step\StepInterface;
+namespace Noctalys\Cli\Command\Step\Init;
+use Noctalys\Cli\Command\Step\StepInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class BaseProject implements StepInterface{

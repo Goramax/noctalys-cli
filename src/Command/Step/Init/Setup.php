@@ -1,11 +1,11 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command\Step\Init;
-use Goramax\NoctalysCli\Command\Step\StepInterface;
-use Goramax\NoctalysCli\Command\Step\Init\Setup\NoctalysFile;
-use Goramax\NoctalysCli\Command\Step\Init\Setup\TemplateFilesSetup;
-use Goramax\NoctalysCli\Command\Step\Init\Setup\UpdateFiles;
-use Goramax\NoctalysCli\Command\Step\Init\Setup\CleanFiles;
+namespace Noctalys\Cli\Command\Step\Init;
+use Noctalys\Cli\Command\Step\StepInterface;
+use Noctalys\Cli\Command\Step\Init\Setup\NoctalysFile;
+use Noctalys\Cli\Command\Step\Init\Setup\TemplateFilesSetup;
+use Noctalys\Cli\Command\Step\Init\Setup\UpdateFiles;
+use Noctalys\Cli\Command\Step\Init\Setup\CleanFiles;
 
 class Setup implements StepInterface
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command\Step\Init;
-use Goramax\NoctalysCli\Command\Step\StepInterface;
+namespace Noctalys\Cli\Command\Step\Init;
+use Noctalys\Cli\Command\Step\StepInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
-use Goramax\NoctalysCli\Utils\GistConfigLoader;
+use Noctalys\Cli\Utils\GistConfigLoader;
 
 class Template implements StepInterface
 {
@@ -17,7 +17,7 @@ class Template implements StepInterface
         if (!isset($context['type']) || ($context['type'] !== 'Frontend' && $context['type'] !== 'Mixed')) {
             // Skip template selection for non-frontend projects
             $context['template-engine'] = 'None';
-            $context['css-framework'] = 'None';
+            // $context['css-framework'] = 'None'; // TODO: Uncomment when CSS framework selection is implemented
             return true;
         }
 
@@ -57,6 +57,7 @@ class Template implements StepInterface
         $output->writeln("Template engine selected: <info>$template</info>");
         
         // CSS framework selection
+        /*
         $validCss = [];
         $cssFrameworks = GistConfigLoader::getCss();
         foreach ($cssFrameworks as $css) {
@@ -93,6 +94,7 @@ class Template implements StepInterface
         }
         $context['css-framework'] = $css;
         $output->writeln("CSS framework selected: <info>$css</info>");
+        */
         
         return true;
     }

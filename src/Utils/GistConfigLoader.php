@@ -1,6 +1,6 @@
 <?php
 
-namespace Goramax\NoctalysCli\Utils;
+namespace Noctalys\Cli\Utils;
 
 class GistConfigLoader
 {

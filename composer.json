@@ -1,14 +1,14 @@
 {
-    "name": "goramax/noctalys-cli",
+    "name": "noctalys/cli",
     "description": "CLI to setup a new Noctalys based project",
     "type": "library",
     "require": {
-        "symfony/console": "^7.3"
+        "symfony/console": "^7.4"
     },
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Goramax\\NoctalysCli\\": "src/"
+            "Noctalys\\Cli\\": "src/"
         }
     },
     "authors": [

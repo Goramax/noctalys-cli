@@ -1,6 +1,6 @@
 <?php
 
-namespace Goramax\NoctalysCLI\Utils;
+namespace Noctalys\Cli\Utils;
 
 use Symfony\Component\Console\Output\OutputInterface;
 

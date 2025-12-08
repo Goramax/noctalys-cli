@@ -4,18 +4,17 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-use Goramax\NoctalysCli\Command\InitCommand;
-use Goramax\NoctalysCli\Command\TestCommand;
-use Goramax\NoctalysCli\Command\MakeCommand\PageCommand;
-use Goramax\NoctalysCli\Command\MakeCommand\LayoutCommand;
+use Noctalys\Cli\Command\InitCommand;
+use Noctalys\Cli\Command\TestCommand;
+use Noctalys\Cli\Command\MakeCommand\PageCommand;
+use Noctalys\Cli\Command\MakeCommand\LayoutCommand;
 
-$app = new Application('Noctalys CLI', '1.0.0');
+$app = new Application('Noctalys CLI', '0.1.0');
 
 $app->addCommands([
     new InitCommand(),
-    // new PageCommand(),
-    // new LayoutCommand(),
-    new TestCommand(),
+    new PageCommand(),
+    new LayoutCommand()
 ]);
 
 $app->run();

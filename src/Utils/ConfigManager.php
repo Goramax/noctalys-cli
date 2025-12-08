@@ -1,6 +1,6 @@
 <?php
 
-namespace Goramax\NoctalysCli\Utils;
+namespace Noctalys\Cli\Utils;
 
 /**
  * Utility class to manage project configuration files

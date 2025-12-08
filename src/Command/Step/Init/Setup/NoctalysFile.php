@@ -1,9 +1,9 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command\Step\Init\Setup;
+namespace Noctalys\Cli\Command\Step\Init\Setup;
 
-use Goramax\NoctalysCli\Command\Step\StepInterface;
-use Goramax\NoctalysCli\Utils\ConfigManager;
+use Noctalys\Cli\Command\Step\StepInterface;
+use Noctalys\Cli\Utils\ConfigManager;
 
 class NoctalysFile implements StepInterface
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command\Step\Init;
-use Goramax\NoctalysCli\Command\Step\StepInterface;
+namespace Noctalys\Cli\Command\Step\Init;
+use Noctalys\Cli\Command\Step\StepInterface;
 use Symfony\Component\Console\Question\Question;
-use Goramax\NoctalysCli\Utils\StringTransformer;
+use Noctalys\Cli\Utils\StringTransformer;
 
 class Name implements StepInterface
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command\Step\Init;
+namespace Noctalys\Cli\Command\Step\Init;
 
-use Goramax\NoctalysCli\Command\Step\StepInterface;
+use Noctalys\Cli\Command\Step\StepInterface;
 
 class RepositoryClone implements StepInterface
 {

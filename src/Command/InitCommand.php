@@ -1,18 +1,18 @@
 <?php
 
-namespace Goramax\NoctalysCli\Command;
+namespace Noctalys\Cli\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Goramax\NoctalysCli\Command\Step\Init\Name;
-use Goramax\NoctalysCli\Command\Step\Init\Path;
-use Goramax\NoctalysCli\Command\Step\Init\Template;
-use Goramax\NoctalysCli\Command\Step\Init\RepositoryClone;
-use Goramax\NoctalysCli\Command\Step\Init\BaseProject;
-use Goramax\NoctalysCli\Command\Step\Init\Type;
-use Goramax\NoctalysCli\Command\Step\Init\Setup;
+use Noctalys\Cli\Command\Step\Init\Name;
+use Noctalys\Cli\Command\Step\Init\Path;
+use Noctalys\Cli\Command\Step\Init\Template;
+use Noctalys\Cli\Command\Step\Init\RepositoryClone;
+use Noctalys\Cli\Command\Step\Init\BaseProject;
+use Noctalys\Cli\Command\Step\Init\Type;
+use Noctalys\Cli\Command\Step\Init\Setup;
 
 class InitCommand extends Command
 {
@@ -33,7 +33,7 @@ class InitCommand extends Command
             ->addOption('path', 'p', InputOption::VALUE_REQUIRED, 'Path to create the project in', getcwd())
             ->addOption('type', 't', InputOption::VALUE_REQUIRED, 'Project type (Backend, Frontend, Mixed)')
             ->addOption('template-engine', 'te', InputOption::VALUE_REQUIRED, 'Template engine (twig, blade, raw)')
-            ->addOption('css-framework', 'cf', InputOption::VALUE_REQUIRED, 'CSS framework (tailwind, none)')
+            // ->addOption('css-framework', 'cf', InputOption::VALUE_REQUIRED, 'CSS framework (tailwind, none)') // TODO LATER
             ->addOption('base-project', null, InputOption::VALUE_REQUIRED , 'Base project to use for initialization if the project type is Frontend or Mixed (Complete or Minimal)')
             ->addOption('frameworkVersion', 'fv', InputOption::VALUE_OPTIONAL, 'Noctalys framework version to use')
             ->setHelp('This command allows you to create a new Noctalys project by guiding you through a series of steps.');
