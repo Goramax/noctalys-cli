@@ -6,6 +6,7 @@ use Noctalys\Cli\Command\Step\Init\Setup\NoctalysFile;
 use Noctalys\Cli\Command\Step\Init\Setup\TemplateFilesSetup;
 use Noctalys\Cli\Command\Step\Init\Setup\UpdateFiles;
 use Noctalys\Cli\Command\Step\Init\Setup\CleanFiles;
+use Noctalys\Cli\Command\Step\Init\Setup\InstallDependencies;
 
 class Setup implements StepInterface
 {
@@ -21,6 +22,7 @@ class Setup implements StepInterface
             new TemplateFilesSetup(),
             new UpdateFiles(),
             new CleanFiles(),
+            new InstallDependencies(),
         ];
 
         // Execute each step

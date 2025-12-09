@@ -1,10 +1,17 @@
 {
     "name": "noctalys/cli",
     "description": "CLI to setup a new Noctalys based project",
+    "keywords": ["noctalys", "cli", "tool", "framework", "installer", "boilerplate"],
+    "homepage": "https://noctalys.org",
     "type": "library",
+    "bin": [
+        "bin/noctalys"
+    ],
     "require": {
-        "symfony/console": "^7.4"
+        "symfony/console": "^7"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "license": "MIT",
     "autoload": {
         "psr-4": {
