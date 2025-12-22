@@ -1,43 +1,66 @@
 <?php
 
 namespace Noctalys\Cli\Command\Step\Init\Setup;
-class InstallDependencies
+
+use Noctalys\Cli\Command\Step\StepInterface;
+
+class InstallDependencies implements StepInterface
 {
 	/**
-	 * @param string|array $workingDir Absolute path as string, or an array containing path info.
-	 * @param bool $optimizeAutoload Use optimized autoload (-o).
-	 * @return int Exit code (0 on success).
+	 * Install project dependencies and add the selected template engine package.
 	 */
-	public function run($workingDir, bool $optimizeAutoload = true): int
+	public function run(array &$context): bool
 	{
-		$dir = $this->normalizeWorkingDir($workingDir);
-
+		$dir = $this->normalizeWorkingDir($context['target'] ?? null);
 		if ($dir === null || !is_dir($dir) || !is_file($dir . DIRECTORY_SEPARATOR . 'composer.json')) {
-			$shown = is_array($workingDir) ? json_encode($workingDir) : (string)$workingDir;
+			$shown = is_array($context['target'] ?? null) ? json_encode($context['target']) : (string)($context['target'] ?? '');
 			echo "[ERROR] Invalid working directory or missing composer.json: {$shown}\n";
-			return 1;
+			return false;
 		}
 
-		$cmd = 'composer install' . ($optimizeAutoload ? ' -o' : '') . ' --working-dir=' . escapeshellarg($dir);
+		$optimizeAutoload = true;
+		if (!$this->runComposerCommand('install' . ($optimizeAutoload ? ' -o' : ''), $dir)) {
+			return false;
+		}
 
-		// passthru streams output directly and returns the exit status via $exitCode
+		$engine = strtolower($context['template-engine'] ?? '');
+		$package = $this->mapEngineToPackage($engine);
+		if ($package !== null) {
+			// Install the chosen template engine into the target project
+			if (!$this->runComposerCommand('require ' . escapeshellarg($package), $dir)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Map a template engine name to its Composer package.
+	 */
+	private function mapEngineToPackage(string $engine): ?string
+	{
+		return match ($engine) {
+			'latte'  => 'latte/latte',
+			'twig'   => 'twig/twig',
+			'smarty' => 'smarty/smarty',
+			default => null,
+		};
+	}
+
+	/**
+	 * Run a composer command in the given working directory.
+	 */
+	private function runComposerCommand(string $command, string $workingDir): bool
+	{
+		$cmd = 'composer ' . $command . ' --working-dir=' . escapeshellarg($workingDir);
 		$exitCode = 0;
 		passthru($cmd, $exitCode);
-
-		if ($exitCode === 0) {
-			echo "[OK] Dependencies installed.\n";
-		} else {
-			echo "[ERROR] Composer install failed with exit code {$exitCode}.\n";
-		}
-
-		return $exitCode;
+		return $exitCode === 0;
 	}
 
 	/**
 	 * Normalize working directory argument to a string path.
-	 * Accepts:
-	 * - string path
-	 * - array with keys ['path'] or ['workingDir'] or first numeric element
 	 */
 	private function normalizeWorkingDir($workingDir): ?string
 	{
@@ -51,11 +74,9 @@ class InstallDependencies
 			if (isset($workingDir['workingDir']) && is_string($workingDir['workingDir'])) {
 				return $workingDir['workingDir'];
 			}
-			// common in setup payloads: 'target' absolute path
 			if (isset($workingDir['target']) && is_string($workingDir['target'])) {
 				return $workingDir['target'];
 			}
-			// first element
 			$first = reset($workingDir);
 			if (is_string($first)) {
 				return $first;

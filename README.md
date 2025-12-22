@@ -30,7 +30,7 @@ vendor/bin/noctalys --help
 ## Usage
 
 > [!WARNING]
-> Template engine syntax converter (Latten, Twig, Smarty) is still WIP, you may need to adjust templates manually after generation.
+> Template engine syntax converter (Latte, Twig, Smarty) is still WIP, you may need to adjust templates manually after generation.
 
 Common commands:
 
